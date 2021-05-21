@@ -73,11 +73,7 @@
                     ><v-col cols="6">{{ center.fee_type }}</v-col>
                     <v-col cols="6">Vaccine Name:</v-col
                     ><v-col cols="6">{{ session.vaccine }}</v-col>
-                    <v-chip-group
-                      v-model="center.selection"
-                      active-class="green white--text"
-                      column
-                    >
+                    <v-chip-group active-class="green white--text" column>
                       <v-chip v-for="slot in session.slots" :key="slot">{{
                         slot
                       }}</v-chip>

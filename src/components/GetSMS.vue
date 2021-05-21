@@ -11,12 +11,22 @@
               Email and Whatsapp
             </p>
             <v-form>
+              <v-overlay v-if="loader">
+                <div class="text-center">
+                  <v-progress-circular
+                    indeterminate
+                    color="red"
+                    :size="100"
+                    :width="9"
+                  ></v-progress-circular>
+                </div>
+              </v-overlay>
               <v-text-field v-model="name" label="Name" required></v-text-field>
               <v-text-field
                 v-model="number"
                 :rules="numberRules"
                 :counter="10"
-                label="Number"
+                label="Mobile Number"
                 required
               ></v-text-field>
               <v-text-field
@@ -66,7 +76,7 @@
               <v-btn text @click="dialog.value = false">Close</v-btn>
             </v-card-actions>
           </v-card>
-          <v-card v-else-if="userAddedSuccessfully == 201">
+          <v-card v-else-if="userAddedSuccessfully == 205">
             <v-toolbar color="green" dark
               >Sorry {{ name }} , It appears that you haven't filled up the
               complete form</v-toolbar
@@ -74,6 +84,30 @@
             <v-card-text>
               <div class="text-h6 pa-12 pl-0">
                 Please fill all the essential entries to get started
+              </div>
+            </v-card-text>
+            <v-card-actions class="justify-end">
+              <v-btn text @click="dialog.value = false">Close</v-btn>
+            </v-card-actions>
+          </v-card>
+          <v-card v-if="userAddedSuccessfully == 202">
+            <v-toolbar color="green" dark>Sorry {{ name }}</v-toolbar>
+            <v-card-text>
+              <div class="text-h6 pa-12 pl-0">
+                It appears that someone with given number already exists. Please
+                try registering with another number
+              </div>
+            </v-card-text>
+            <v-card-actions class="justify-end">
+              <v-btn text @click="dialog.value = false">Close</v-btn>
+            </v-card-actions>
+          </v-card>
+          <v-card v-if="userAddedSuccessfully == 201">
+            <v-toolbar color="green" dark>Sorry {{ name }}</v-toolbar>
+            <v-card-text>
+              <div class="text-h6 pa-12 pl-0">
+                It appears that someone with given email already exists. Please
+                try registering with another email
               </div>
             </v-card-text>
             <v-card-actions class="justify-end">
@@ -120,6 +154,7 @@ export default {
         (v) => /.+@gmail.com+/.test(v) || "E-mail must be valid",
       ],
       userAddedSuccessfully: 0,
+      loader: false,
     };
   },
   methods: {
@@ -131,10 +166,11 @@ export default {
         this.pincode.length == 6 &&
         this.minimumAge
       ) {
+        this.loader = true;
         axios({
           method: "POST",
           headers: { "content-type": "application/x-www-form-urlencoded" },
-          url: "https://vaccifybackend.herokuapp.com/addUser",
+          url: "your backend API",
           data: qs.stringify({
             name: this.name,
             number: this.number,
@@ -144,15 +180,30 @@ export default {
           }),
         })
           .then((dataFromAPI) => {
-            this.userAddedSuccessfully = 200;
-            console.log("User added to Database successfully" + dataFromAPI);
+            this.loader = false;
+            if (dataFromAPI.status == 200) {
+              this.userAddedSuccessfully = 200;
+              console.log("User added to Database successfully" + dataFromAPI);
+            } else if (dataFromAPI.status == 202) {
+              this.userAddedSuccessfully = 202;
+              console.log(
+                "User with given number already exists in our Database" +
+                  dataFromAPI
+              );
+            } else if (dataFromAPI.status == 201) {
+              this.userAddedSuccessfully = 201;
+              console.log(
+                "User with given email already exists in our Database"
+              );
+            }
           })
           .catch((err) => {
+            this.loader = false;
             this.userAddedSuccessfully = 404;
             console.log(err + "OP OP");
           });
       } else {
-        this.userAddedSuccessfully = 201;
+        this.userAddedSuccessfully = 205;
         console.log("Something is missing");
       }
     },
